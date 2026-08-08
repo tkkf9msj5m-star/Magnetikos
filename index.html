@@ -3,65 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kelly Manager - Rebalancement Hebdomadaire</title>
-    <!-- C'est cette ligne qui fait le lien avec le fichier de style -->
+    <title>Kelly Manager - Copier/Coller</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 1rem;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+        .text-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .header-actions {
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <header class="header">
             <h1>💰 Kelly Manager</h1>
-            <p class="subtitle">Rebalancement hebdomadaire avec gestion de capital personnalisée</p>
+            <p class="subtitle">Version rapide : Copiez-Collez vos listes !</p>
         </header>
 
+        <div class="header-actions">
+            <button id="shiftWeeksBtn" class="btn btn--secondary">🔄 Passer à la semaine suivante</button>
+        </div>
+
         <main class="main-content">
-            <!-- Section Import Screenings -->
             <section class="card">
                 <div class="card__header">
-                    <h2>📂 Import Screenings</h2>
-                    <p class="description">Screening semaine vs semaine dernière</p>
+                    <h2>📂 Vos Listes de Tickers</h2>
+                    <p class="description">Collez une liste de tickers (un par ligne ou séparés par des espaces/virgules)</p>
                 </div>
                 <div class="card__body">
                     <div class="import-grid-3">
+                        
                         <!-- Screening Semaine -->
                         <div class="import-section">
-                            <h3 class="section-title current">🎯 Screening Semaine</h3>
-                            <div class="file-upload">
-                                <input type="file" id="currentWeekFile" accept=".txt" style="display: none;">
-                                <label for="currentWeekFile" class="upload-btn btn btn--primary">
-                                    📄 Importer
-                                </label>
+                            <h3 class="section-title current">🎯 Semaine Actuelle (<span id="currentCount">0</span>)</h3>
+                            <textarea id="currentWeekText" placeholder="Collez les nouveaux tickers ici...
+EX:
+AAPL
+MSFT
+TSLA"></textarea>
+                            <div class="text-controls">
+                                <button id="processCurrentBtn" class="btn btn--primary btn--full">Valider Liste</button>
                             </div>
                             <div id="currentWeekStatus" class="status hidden"></div>
-                            <div id="currentWeekDisplay" class="ticker-display hidden">
-                                <h4 class="display-title">Tickers détectés (<span id="currentWeekCount">0</span>)</h4>
-                                <div id="currentWeekList" class="ticker-list"></div>
-                            </div>
                         </div>
 
                         <!-- Semaine Dernière -->
                         <div class="import-section">
-                            <h3 class="section-title previous">📅 Semaine Dernière</h3>
-                            <div class="file-upload">
-                                <input type="file" id="previousWeekFile" accept=".txt" style="display: none;">
-                                <label for="previousWeekFile" class="upload-btn btn btn--secondary">
-                                    📄 Importer
-                                </label>
+                            <h3 class="section-title previous">📅 Semaine Dernière (<span id="prevCount">0</span>)</h3>
+                            <textarea id="previousWeekText" placeholder="Anciens tickers (se remplira automatiquement si vous utilisez le bouton Passer à la semaine suivante)"></textarea>
+                            <div class="text-controls">
+                                <button id="processPrevBtn" class="btn btn--secondary btn--full">Valider Anciens</button>
                             </div>
                             <div id="previousWeekStatus" class="status hidden"></div>
-                            <div id="previousWeekDisplay" class="ticker-display hidden">
-                                <h4 class="display-title">Tickers précédents (<span id="previousWeekCount">0</span>)</h4>
-                                <div id="previousWeekList" class="ticker-list"></div>
-                            </div>
                         </div>
 
                         <!-- Rebalancement -->
                         <div class="import-section rebalance-section">
                             <h3 class="section-title warning">⚖️ Rebalancement</h3>
                             <div class="action-buttons">
-                                <button id="clearAll" class="btn btn--danger btn--full">🗑️ Tout effacer</button>
+                                <button id="clearAll" class="btn btn--danger btn--full">🗑️ Tout vider</button>
                             </div>
-                            <div id="rebalanceStatus" class="status hidden"></div>
+                            <div id="rebalanceStatus" class="status hidden" style="margin-top: 15px;"></div>
                             
                             <div id="buyPositionsDisplay" class="ticker-display buy-display hidden">
                                 <h4 class="display-title">À ACHETER (<span id="buyCount">0</span>)</h4>
@@ -80,78 +97,47 @@
             <!-- Configuration Kelly -->
             <section class="card">
                 <div class="card__header">
-                    <h2>⚖️ Configuration Kelly Personnalisée</h2>
-                    <p class="description">Paramètres manuels</p>
+                    <h2>⚖️ Configuration Kelly</h2>
                 </div>
                 <div class="card__body">
                     <div class="input-grid">
                         <div class="input-group">
-                            <label for="capitalActuel">Votre capital total en $</label>
+                            <label for="capitalActuel">Capital total ($)</label>
                             <input type="number" id="capitalActuel" value="100000" step="1000">
                         </div>
                         <div class="input-group">
-                            <label for="kellyOptimal">Fraction du capital à exposer (%)</label>
-                            <input type="number" id="kellyOptimal" value="37" step="1" max="100" min="0">
+                            <label for="kellyOptimal">Exposition (%)</label>
+                            <input type="number" id="kellyOptimal" value="37" step="1">
                         </div>
                         <div class="input-group">
-                            <label for="totalPositions">Nombre de positions (Screening)</label>
-                            <input type="number" id="totalPositions" value="0" min="1">
+                            <label for="totalPositions">Nombre Cible (Calculé auto)</label>
+                            <input type="number" id="totalPositions" value="0" readonly style="background:#f1f5f9;">
                         </div>
                         <div class="input-group">
                             <label for="eurUsd">Taux EUR/USD</label>
                             <input type="number" id="eurUsd" value="1.08" step="0.01">
                         </div>
                     </div>
-
                     <div class="action-bar">
-                        <button id="calculateKelly" class="btn btn--success btn--large">
-                            🧮 Lancer le Calcul
-                        </button>
+                        <button id="calculateKelly" class="btn btn--success btn--large">🧮 Lancer le Calcul</button>
                     </div>
                 </div>
             </section>
 
             <!-- Résultats -->
             <section id="results" class="card hidden">
-                <div class="card__header">
-                    <h2>📊 Résultats et Allocation</h2>
-                </div>
                 <div class="card__body">
                     <div class="results-grid">
                         <div class="result-item highlight">
-                            <div class="result-label">Capital Alloué (Actions) USD</div>
+                            <div class="result-label">Capital Actions (USD)</div>
                             <div class="result-value" id="capitalExposeUsd">$0</div>
                         </div>
-                        <div class="result-item">
-                            <div class="result-label">Équivalent EUR</div>
-                            <div class="result-value" id="capitalExposeEur">0€</div>
-                        </div>
                         <div class="result-item highlight">
-                            <div class="result-label">Budget Nouvelles Positions</div>
-                            <div class="result-value" id="usdNouvellesPositions">$0</div>
-                        </div>
-                        <div class="result-item">
-                            <div class="result-label">Total du screening</div>
-                            <div class="result-value" id="totalScreeningResult">0</div>
-                        </div>
-                        <div class="result-item success">
-                            <div class="result-label">Nouvelles positions (Achat)</div>
-                            <div class="result-value" id="buyPositionsResult">0</div>
-                        </div>
-                        <div class="result-item danger">
-                            <div class="result-label">Sorties (Vente)</div>
-                            <div class="result-value" id="sellPositionsResult">0</div>
-                        </div>
-                        <div class="result-item">
-                            <div class="result-label">USD par position</div>
+                            <div class="result-label">Cible par position (USD)</div>
                             <div class="result-value" id="positionUsdResult">$0</div>
                         </div>
                         <div class="result-item">
-                            <div class="result-label">EUR par position</div>
-                            <div class="result-value" id="positionEurResult">0€</div>
-                        </div>
-                        <div class="result-item">
-                            <div class="result-label">Liquidités conservées (SGOV/USD)</div>
+                            <div class="result-label">Liquidités SGOV (USD)</div>
                             <div class="result-value" id="liquiditesResult">$0</div>
                         </div>
                     </div>
@@ -159,8 +145,6 @@
             </section>
         </main>
     </div>
-
-    <!-- C'est cette ligne qui fait le lien avec votre fichier JavaScript existant -->
     <script src="app.js"></script>
 </body>
 </html>

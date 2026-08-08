@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelly Manager - Rebalancement Hebdomadaire</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>💰 Kelly Manager</h1>
+            <p class="subtitle">Rebalancement hebdomadaire avec gestion de capital personnalisée</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Section Import Screenings -->
+            <section class="card">
+                <div class="card__header">
+                    <h2>📂 Import Screenings</h2>
+                    <p class="description">Screening semaine vs semaine dernière</p>
+                </div>
+                <div class="card__body">
+                    <div class="import-grid-3">
+                        <!-- Screening Semaine -->
+                        <div class="import-section">
+                            <h3 class="section-title current">🎯 Screening Semaine</h3>
+                            <div class="file-upload">
+                                <input type="file" id="currentWeekFile" accept=".txt" style="display: none;">
+                                <label for="currentWeekFile" class="upload-btn btn btn--primary">
+                                    📄 Importer
+                                </label>
+                            </div>
+                            <div id="currentWeekDisplay" class="ticker-display hidden">
+                                <div class="ticker-count" id="currentWeekCount">0 tickers</div>
+                                <div class="ticker-list" id="currentWeekList"></div>
+                            </div>
+                            <div id="currentWeekStatus" class="status hidden"></div>
+                        </div>
+
+                        <!-- Screening Semaine Dernière -->
+                        <div class="import-section">
+                            <h3 class="section-title previous">📅 Semaine Dernière</h3>
+                            <div class="file-upload">
+                                <input type="file" id="previousWeekFile" accept=".txt" style="display: none;">
+                                <label for="previousWeekFile" class="upload-btn btn btn--secondary">
+                                    📁 Importer
+                                </label>
+                            </div>
+                            <div id="previousWeekDisplay" class="ticker-display hidden">
+                                <div class="ticker-count" id="previousWeekCount">0 tickers</div>
+                                <div class="ticker-list" id="previousWeekList"></div>
+                            </div>
+                            <div id="previousWeekStatus" class="status hidden"></div>
+                        </div>
+
+                        <!-- Résultats Rebalancement -->
+                        <div class="import-section">
+                            <h3 class="section-title results">⚖️ Rebalancement</h3>
+
+                            <!-- Positions à acheter -->
+                            <div id="buyPositionsDisplay" class="ticker-display result-display-buy hidden">
+                                <div class="ticker-header">
+                                    <span class="buy-icon">🟢 ACHETER</span>
+                                    <span id="buyCount" class="ticker-count">0</span>
+                                </div>
+                                <div id="buyList" class="ticker-list"></div>
+                            </div>
+
+                            <!-- Positions à vendre -->
+                            <div id="sellPositionsDisplay" class="ticker-display result-display-sell hidden">
+                                <div class="ticker-header">
+                                    <span class="sell-icon">🔴 VENDRE</span>
+                                    <span id="sellCount" class="ticker-count">0</span>
+                                </div>
+                                <div id="sellList" class="ticker-list"></div>
+                            </div>
+
+                            <div id="rebalanceStatus" class="status hidden"></div>
+                        </div>
+                    </div>
+
+                    <div class="action-row">
+                        <button id="clearAll" class="btn btn--outline">🗑️ Effacer Tout</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Configuration Kelly -->
+            <section class="card">
+                <div class="card__header">
+                    <h2>⚖️ Configuration Kelly Personnalisée</h2>
+                    <p class="description">Paramètres manuels</p>
+                </div>
+                <div class="card__body">
+                    <div class="config-grid">
+                        <div class="form-group">
+                            <label for="capitalActuel">Capital total (USD)</label>
+                            <input type="number" id="capitalActuel" class="form-control" value="50000" min="0" step="100">
+                            <small class="form-help">Votre capital total en $</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="kellyOptimal">Taux Kelly (%)</label>
+                            <input type="number" id="kellyOptimal" class="form-control" value="37" min="0" max="100" step="1">
+                            <small class="form-help">Fraction du capital à exposer</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="eurUsd">Taux EUR/USD</label>
+                            <input type="number" id="eurUsd" class="form-control" value="1.10" step="0.01">
+                            <small class="form-help">Saisie manuelle du taux</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="totalPositions">Positions screening</label>
+                            <input type="number" id="totalPositions" class="form-control" value="0">
+                            <small class="form-help">Modifiable manuellement si besoin</small>
+                        </div>
+                    </div>
+
+                    <div class="action-row">
+                        <button id="calculateKelly" class="btn btn--primary">🧮 Calculer Allocation</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Résultats Kelly -->
+            <section id="results" class="card hidden">
+                <div class="card__header">
+                    <h2>📊 Résultats d'Allocation</h2>
+                    <p class="description">Répartition de votre capital</p>
+                </div>
+                <div class="card__body">
+
+                    <div class="results-summary">
+                        <div class="summary-item">
+                            <div class="summary-label">Capital à exposer (USD)</div>
+                            <div class="summary-value" id="capitalExposeUsd">$0</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Capital équivalent (EUR)</div>
+                            <div class="summary-value highlight" id="capitalExposeEur">0€</div>
+                        </div>
+                        <div class="summary-item ibkr-highlight">
+                            <div class="summary-label">USD nouvelles positions</div>
+                            <div class="summary-value highlight-new" id="usdNouvellesPositions">$0</div>
+                        </div>
+                    </div>
+
+                    <div class="results-grid">
+                        <div class="result-item">
+                            <div class="result-label">Positions cible</div>
+                            <div class="result-value" id="totalScreeningResult">0</div>
+                        </div>
+                        <div class="result-item buy-highlight">
+                            <div class="result-label">🟢 À acheter</div>
+                            <div class="result-value" id="buyPositionsResult">0</div>
+                        </div>
+                        <div class="result-item sell-highlight">
+                            <div class="result-label">🔴 À vendre</div>
+                            <div class="result-value" id="sellPositionsResult">0</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">USD par position</div>
+                            <div class="result-value" id="positionUsdResult">$0</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">EUR par position</div>
+                            <div class="result-value" id="positionEurResult">0€</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Liquidités conservées (USD)</div>
+                            <div class="result-value" id="liquiditesResult">$0</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
